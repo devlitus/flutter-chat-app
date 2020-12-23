@@ -1,30 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 
+import 'package:chat_app/services/atuh_service.dart';
+import 'package:provider/provider.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:chat_app/models/user.dart';
 
 class UserPage extends StatelessWidget {
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
   final users = [
-    User(uid: '1', name: 'Carles', email: 'test1@test.com', onLine: true),
-    User(uid: '2', name: 'Melissa', email: 'test2@test.com', onLine: false),
-    User(uid: '3', name: 'Antonio', email: 'test3@test.com', onLine: true),
-    User(uid: '4', name: 'Juan', email: 'test4@test.com', onLine: false),
-    User(uid: '5', name: 'Maria', email: 'test5@test.com', onLine: true),
+    User(uid: '1', name: 'Carles', email: 'test1@test.com', online: true),
+    User(uid: '2', name: 'Melissa', email: 'test2@test.com', online: false),
+    User(uid: '3', name: 'Antonio', email: 'test3@test.com', online: true),
+    User(uid: '4', name: 'Juan', email: 'test4@test.com', online: false),
+    User(uid: '5', name: 'Maria', email: 'test5@test.com', online: true),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final users = authService.user;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
         title: Text(
-          'mi nombre',
+          users.name,
           style: TextStyle(color: Colors.black45),
         ),
-        leading: Icon(Icons.exit_to_app, color: Colors.black54),
+        leading: IconButton(
+          icon: Icon(Icons.exit_to_app, color: Colors.black54),
+          onPressed: () {
+            // TODO: Desconectarse el socket serve
+            AuthService.deleteToken();
+            Navigator.pushReplacementNamed(context, 'login');
+          },
+        ),
         actions: [
           IconButton(
               icon: Icon(
@@ -77,7 +88,7 @@ class UserPage extends StatelessWidget {
         width: 10,
         height: 10,
         decoration: BoxDecoration(
-            color: user.onLine ? Colors.green[300] : Colors.red,
+            color: user.online ? Colors.green[300] : Colors.red,
             borderRadius: BorderRadius.circular(100)),
       ),
     );

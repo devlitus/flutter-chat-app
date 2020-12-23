@@ -1,3 +1,4 @@
+import 'package:chat_app/helpers/show_alert.dart';
 import 'package:chat_app/services/atuh_service.dart';
 import 'package:chat_app/widgets/button_blue.dart';
 import 'package:chat_app/widgets/custom_inputs.dart';
@@ -53,6 +54,7 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 50),
       child: Column(
@@ -71,11 +73,19 @@ class __FormState extends State<_Form> {
           ),
           ButtonBlue(
             text: 'Ingresar',
-            onPressed: () {
-              final authService =
-                  Provider.of<AuthService>(context, listen: false);
-              authService.login(emailCtrl.text, passwordCtrl.text);
-            },
+            onPressed: authService.authenticated
+                ? null
+                : () async {
+                    FocusScope.of(context).unfocus();
+                    final loginOk = await authService.login(
+                        emailCtrl.text.trim(), passwordCtrl.text.trim());
+                    if (loginOk) {
+                      Navigator.pushReplacementNamed(context, 'user');
+                    } else {
+                      showAlert(context, 'Login Incorrecto',
+                          'Contraseña o correo incorrecto');
+                    }
+                  },
           )
         ],
       ),
