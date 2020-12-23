@@ -1,8 +1,10 @@
+import 'package:chat_app/services/atuh_service.dart';
 import 'package:chat_app/widgets/button_blue.dart';
 import 'package:chat_app/widgets/custom_inputs.dart';
 import 'package:chat_app/widgets/labels.dart';
 import 'package:chat_app/widgets/logo.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({Key key}) : super(key: key);
@@ -64,15 +66,15 @@ class __FormState extends State<_Form> {
           CustomInput(
             icon: Icons.lock_open_outlined,
             placeholder: 'Contraseña',
-            keyInputType: TextInputType.visiblePassword,
             textEditingController: passwordCtrl,
             isPassword: true,
           ),
           ButtonBlue(
             text: 'Ingresar',
             onPressed: () {
-              print(emailCtrl.text);
-              print(passwordCtrl.text);
+              final authService =
+                  Provider.of<AuthService>(context, listen: false);
+              authService.login(emailCtrl.text, passwordCtrl.text);
             },
           )
         ],
