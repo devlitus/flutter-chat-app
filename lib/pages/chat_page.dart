@@ -1,8 +1,13 @@
 import 'dart:io';
-
-import 'package:chat_app/widgets/chat_messages.dart';
+import 'package:chat_app/models/message_response.dart';
+import 'package:chat_app/services/atuh_service.dart';
+import 'package:chat_app/services/socket_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:chat_app/services/chat_service.dart';
+import 'package:chat_app/widgets/chat_messages.dart';
 
 class ChartPage extends StatefulWidget {
   const ChartPage({Key key}) : super(key: key);
@@ -15,15 +20,41 @@ class _ChartPageState extends State<ChartPage> {
   final _textController = TextEditingController();
   final _focusNode = FocusNode();
   bool _isWrite = false;
-  List<ChatMessage> _message = [
-    ChatMessage(uid: '123', text: 'Hola Mundo'),
-    ChatMessage(uid: '124', text: 'Hola Mundo'),
-    ChatMessage(uid: '123', text: 'Hola Mundo'),
-    ChatMessage(uid: '124', text: 'Hola Mundo'),
-  ];
+  List<ChatMessage> _message = [];
+  ChatService chatService;
+  SocketService socketService;
+  AuthService authService;
+
+  @override
+  void initState() {
+    super.initState();
+    this.chatService = Provider.of<ChatService>(context, listen: false);
+    this.socketService = Provider.of<SocketService>(context, listen: false);
+    this.authService = Provider.of<AuthService>(context, listen: false);
+    this.socketService.socket.on('message-personal', _lisenerMessage);
+    _loadinHistory(chatService.userPara.uid);
+  }
+
+  void _loadinHistory(String userId) async {
+    List<Message> chat = await chatService.getChat(userId);
+    final history = chat.map((m) => ChatMessage(text: m.message, uid: m.de));
+    setState(() {
+      _message.insertAll(0, history);
+    });
+  }
+
+  void _lisenerMessage(dynamic payload) {
+    ChatMessage message =
+        ChatMessage(text: payload['message'], uid: payload['de']);
+    setState(() {
+      _message.insert(0, message);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final userPara = chatService.userPara;
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 100,
@@ -33,10 +64,11 @@ class _ChartPageState extends State<ChartPage> {
         title: Column(
           children: [
             CircleAvatar(
-              child: Text('Te', style: TextStyle(fontSize: 12)),
+              child: Text(userPara.name.substring(0, 2),
+                  style: TextStyle(fontSize: 12)),
               backgroundColor: Colors.blue[100],
             ),
-            Text('Test', style: TextStyle(color: Colors.black87)),
+            Text(userPara.name, style: TextStyle(color: Colors.black87)),
           ],
         ),
       ),
@@ -116,20 +148,26 @@ class _ChartPageState extends State<ChartPage> {
     );
   }
 
-  _handleSubmit(String value) {
-    if (value.length == 0) return;
+  _handleSubmit(String text) {
+    if (text.length == 0) return;
     _textController.clear();
     _focusNode.requestFocus();
-    final newMessage = ChatMessage(uid: '123', text: value);
+    final newMessage = ChatMessage(uid: authService.user.uid, text: text);
     _message.insert(0, newMessage);
     setState(() {
       _isWrite = false;
+    });
+
+    socketService.emit('message-personal', {
+      'de': authService.user.uid,
+      'para': chatService.userPara.uid,
+      'message': text
     });
   }
 
   @override
   void dispose() {
-    // TODO: off de sockets
+    socketService.socket.off('message-personal');
     super.dispose();
   }
 }

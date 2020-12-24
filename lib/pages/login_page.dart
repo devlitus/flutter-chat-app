@@ -1,5 +1,6 @@
 import 'package:chat_app/helpers/show_alert.dart';
 import 'package:chat_app/services/atuh_service.dart';
+import 'package:chat_app/services/socket_service.dart';
 import 'package:chat_app/widgets/button_blue.dart';
 import 'package:chat_app/widgets/custom_inputs.dart';
 import 'package:chat_app/widgets/labels.dart';
@@ -55,6 +56,8 @@ class __FormState extends State<_Form> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 50),
       child: Column(
@@ -80,6 +83,7 @@ class __FormState extends State<_Form> {
                     final loginOk = await authService.login(
                         emailCtrl.text.trim(), passwordCtrl.text.trim());
                     if (loginOk) {
+                      socketService.connect();
                       Navigator.pushReplacementNamed(context, 'user');
                     } else {
                       showAlert(context, 'Login Incorrecto',
